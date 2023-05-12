@@ -53,6 +53,12 @@ static JSValue js_hash_tobase64(JSContext *ctx, JSValueConst this_val,
 	}
 
 	unsigned char *ptr = toBase64(instr, inlen);
+	if( !ptr )
+	{
+		JS_ThrowTypeError(ctx, "wolfssl error");
+		return JS_UNDEFINED;
+	}
+
 	JSValue js_b64 = JS_NewString(ctx, ptr);
 	free(ptr);
 
@@ -74,6 +80,11 @@ static JSValue js_hash_frombase64(JSContext *ctx, JSValueConst this_val,
 
 	outlen = fromBase64(instr, inlen, &ptr);
 	JS_FreeCString(ctx, instr);
+	if( -1 == outlen )
+	{
+		JS_ThrowTypeError(ctx, "wolfssl error");
+		return JS_UNDEFINED;
+	}
 
 	JSValue arr = JS_NewArray(ctx);
 	for( int x=0; x < outlen; x++ )
