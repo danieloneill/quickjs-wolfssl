@@ -23,34 +23,34 @@ function stringToUint8array(str)
  * Pure JS version, works, but not super fast:
  ***
 	let buf = new ArrayBuffer(str.length);
-    let bufView = new Uint8Array(buf);
+	let bufView = new Uint8Array(buf);
 	const strLen = str.length;
-    for (let i=0; i<strLen; i++) {
+	for (let i=0; i<strLen; i++) {
 		bufView[i] = str.charCodeAt(i);
-    }
-    return bufView;
+	}
+	return bufView;
 */
 	return new Uint8Array( wolfssl.stringToUint8Array(str) );
 }
 
 function bytesToSize(bytes) {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  if (bytes === 0) return 'n/a'
-  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
-  if (i === 0) return `${bytes} ${sizes[i]})`
-  return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
+	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+	if (bytes === 0) return 'n/a'
+	const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
+	if (i === 0) return `${bytes} ${sizes[i]})`
+	return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
 }
 
 function sendFileChunk(info, headerBuffer)
 {
-    if( !info )
-    {
-        console.log("sendFileChunk: no info!");
-        return;
-    }
+	if( !info )
+	{
+		console.log("sendFileChunk: no info!");
+		return;
+	}
 
-    let data = new Uint8Array(8192);
-    let bp = 0;
+	let data = new Uint8Array(8192);
+	let bp = 0;
 	if( headerBuffer )
 	{
 		let x=0;
@@ -89,13 +89,12 @@ function sendFileChunk(info, headerBuffer)
 
 function sendFile(info, path, mimetype)
 {
-    const [obj, err] = os.stat(path);
-    if( !( obj.mode & os.S_IFREG ) )
-    {
-        console.log(' -- Not a file -- ');
-        //send404(info);
-        return;
-    }
+	const [obj, err] = os.stat(path);
+	if( !( obj.mode & os.S_IFREG ) )
+	{
+		console.log(' -- Not a file -- ');
+		return;
+	}
 
 	let headers = [
 		`Connection: ${info.connectionState}`,
@@ -104,10 +103,9 @@ function sendFile(info, path, mimetype)
 		`Date: ${getHTTPDate( new Date() )}`
 	];
 
-    info.file = os.open(path, os.O_RDONLY);
-    const asstr = `${info.proto} 200 Okay\r\n${headers.join("\r\n")}\r\n\r\n`;
-    //const asstr = `${info.proto} 200 Okay\r\nContent-Type: ${mimetype}\r\nConnection: ${info.connectionState}\r\nContent-Length: ${obj.size}\r\n\r\n`;
-    let newbuf = stringToUint8array(asstr);
+	info.file = os.open(path, os.O_RDONLY);
+	const asstr = `${info.proto} 200 Okay\r\n${headers.join("\r\n")}\r\n\r\n`;
+	let newbuf = stringToUint8array(asstr);
 
 	// Stop processing requests until send finishes~
 	console.log("Disabling read handler...");
@@ -121,16 +119,16 @@ function sendFile(info, path, mimetype)
 		}
 	};
 
-    os.setReadHandler(info.file, function() {
-        sendFileChunk(info, newbuf);
+	os.setReadHandler(info.file, function() {
+		sendFileChunk(info, newbuf);
 		newbuf = false;
-    });
+	});
 }
 
 function sendContent(info, content, mimetype, fullstatus)
 {
-    if( !fullstatus )
-        fullstatus = '200 OK';
+	if( !fullstatus )
+		fullstatus = '200 OK';
 
 	let headers = [
 		`Connection: ${info.connectionState}`,
@@ -139,26 +137,26 @@ function sendContent(info, content, mimetype, fullstatus)
 		`Date: ${getHTTPDate( new Date() )}`
 	];
 
-    const asstr = `${info.proto} ${fullstatus}\r\n${headers.join("\r\n")}\r\n\r\n${content}`;
+	const asstr = `${info.proto} ${fullstatus}\r\n${headers.join("\r\n")}\r\n\r\n${content}`;
 	const start = new Date();
-    const newbuf = stringToUint8array(asstr);
+	const newbuf = stringToUint8array(asstr);
 	console.log("sendContent:stringToUint8array "+( (new Date().getTime()) - start.getTime() )+"ms");
-    info.write(newbuf.buffer);
+	info.write(newbuf.buffer);
 }
 
 function send404(info)
 {
-    console.log(" xxx Sending 404...");
-    console.log( new Error().stack );
-    const content = "<html><head><title>404 - Not Found</title></head><body><h2>Sorry, resource not found.</h2></body></html>";
-    sendContent(info, content, 'text/html', '404 Not Found');
+	console.log(" xxx Sending 404...");
+	console.log( new Error().stack );
+	const content = "<html><head><title>404 - Not Found</title></head><body><h2>Sorry, resource not found.</h2></body></html>";
+	sendContent(info, content, 'text/html', '404 Not Found');
 }
 
 function handleRequest(info, lines)
 {
-    const req = lines[0].split(' ');
+	const req = lines[0].split(' ');
 
-    console.log("Request: "+req[1]);
+	console.log("Request: "+req[1]);
 	info.proto = req[2];
 
 	info.connectionState = 'keep-alive';
@@ -173,26 +171,14 @@ function handleRequest(info, lines)
 			info.connectionState = pair[1];
 	}
 
-    if( !req || req.length < 3 )
-        return;
-/*
-    if( req[1] == '/' )
-    {
-        const content = "<html><head><title>QuickJS - QuickHTTPServer</title></head><body><h2>Success</h2><p /><a href=\"https://github.com/danieloneill/quickjs-net\"><img src=\"/github.png\" /></a></body></html>";
-        const asstr = `${info.proto} 200 Ok\r\nContent-Type: text/html\r\nConnection: ${info.connectionState}\r\nContent-Length: ${content.length}\r\n\r\n${content}`;
-        const newbuf = stringToUint8array(asstr);
-		info.write(newbuf.buffer);
-    }
-    else if( req[1] == '/github.png' )
-        sendFile(info, 'github.png', 'image/png');
-    else
-        sendResource(info, webroot, req[1]);
-        */
+	if( !req || req.length < 3 )
+		return;
 
-    let root = webroot;
-    if( req[1].substr(0, 10) === '/internal/' )
-	root = '.';
-    sendResource(info, root, req[1]);
+	let root = webroot;
+	if( req[1].substr(0, 10) === '/internal/' )
+		root = '.';
+
+	sendResource(info, root, req[1]);
 
 	if( info.connectionState === 'close' )
 	{
@@ -200,7 +186,7 @@ function handleRequest(info, lines)
 		info.close();
 	}
 
-    //std.gc();
+	//std.gc();
 }
 
 function handlePacket(info, pkt)
@@ -254,168 +240,165 @@ function handlePacket(info, pkt)
 
 function mimeForPath(path)
 {
-    let mimetype = 'text/plain';
-    if( path.endsWith('.png') )
-        mimetype = 'image/png';
-    else if( path.endsWith('.jpg') )
-        mimetype = 'image/jpg';
-    else if( path.endsWith('.css') )
-        mimetype = 'text/css';
-    else if( path.endsWith('.js') )
-        mimetype = 'text/javascript';
-    else if( path.endsWith('.otf') )
-        mimetype = 'font/otf';
-    else if( path.endsWith('.html') )
-        mimetype = 'text/html';
-    return mimetype;
+	let mimetype = 'text/plain';
+	if( path.endsWith('.png') )
+		mimetype = 'image/png';
+	else if( path.endsWith('.jpg') || path.endsWith('.jpeg') )
+		mimetype = 'image/jpg';
+	else if( path.endsWith('.css') )
+		mimetype = 'text/css';
+	else if( path.endsWith('.js') )
+		mimetype = 'text/javascript';
+	else if( path.endsWith('.otf') )
+		mimetype = 'font/otf';
+	else if( path.endsWith('.html') )
+		mimetype = 'text/html';
+	return mimetype;
 }
 
 function getHTTPDate( indate )
 {
-    // Locale-independent, used for Date-type HTTP headers.
-    const dow = [ 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' ];
-    const months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
+	// Locale-independent, used for Date-type HTTP headers.
+	const dow = [ 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' ];
+	const months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
 
-    const l_dow = dow[ indate.getUTCDay() ];
-    let l_dom = indate.getUTCDate();
-    if( l_dom < 10 )
-        l_dom = '0'+l_dom;
-    const l_mon = months[ indate.getUTCMonth() ];
-    const l_year = indate.getUTCFullYear();
-    let l_hour = indate.getUTCHours();
-    if( l_hour < 10 )
-        l_hour = '0'+l_hour;
-    let l_mins = indate.getUTCMinutes();
-    if( l_mins < 10 )
-        l_mins = '0'+l_mins;
-    let l_seconds = indate.getUTCSeconds();
-    if( l_seconds < 10 )
-        l_seconds = '0'+l_seconds;
+	const l_dow = dow[ indate.getUTCDay() ];
+	let l_dom = indate.getUTCDate();
+	if( l_dom < 10 )
+		l_dom = '0'+l_dom;
+	const l_mon = months[ indate.getUTCMonth() ];
+	const l_year = indate.getUTCFullYear();
+	let l_hour = indate.getUTCHours();
+	if( l_hour < 10 )
+		l_hour = '0'+l_hour;
+	let l_mins = indate.getUTCMinutes();
+	if( l_mins < 10 )
+		l_mins = '0'+l_mins;
+	let l_seconds = indate.getUTCSeconds();
+	if( l_seconds < 10 )
+		l_seconds = '0'+l_seconds;
 
-    const res = l_dow+', '+l_dom+' '+l_mon+' '+l_year+' '+l_hour+':'+l_mins+':'+l_seconds+' GMT';
-    return res;
+	const res = l_dow+', '+l_dom+' '+l_mon+' '+l_year+' '+l_hour+':'+l_mins+':'+l_seconds+' GMT';
+	return res;
 }
 
 function sendResource(info, root, path)
 {
-    const fullpath = root + '/' + path;
-    const [sobj, serr] = os.stat(fullpath);
-    if( !sobj )
-    {
-        console.log(`404: ${fullpath}`);
-        return send404(info);
-    }
-
-    if( sobj.mode & os.S_IFDIR )
+	const fullpath = root + '/' + path;
+	const [sobj, serr] = os.stat(fullpath);
+	if( !sobj )
 	{
-        const idxPath = fullpath + '/index.html';
-        const [iobj, ierr] = os.stat(idxPath);
-        if( iobj && iobj.mode & os.S_IFREG )
-        {
-            let mimetype = mimeForPath(idxPath);
-            return sendFile(info, idxPath, mimetype);
-        }
+		console.log(`404: ${fullpath}`);
+		return send404(info);
+	}
+
+	if( sobj.mode & os.S_IFDIR )
+	{
+		const idxPath = fullpath + '/index.html';
+		const [iobj, ierr] = os.stat(idxPath);
+		if( iobj && iobj.mode & os.S_IFREG )
+		{
+			let mimetype = mimeForPath(idxPath);
+			return sendFile(info, idxPath, mimetype);
+		}
 
 		const content = dirListing(root, path);
-        return sendContent(info, content, 'text/html');
+		return sendContent(info, content, 'text/html');
 	}
-    else if( sobj.mode & os.S_IFREG )
-    {
-        //sendContent(info, "I'm a file.", 'text/html');
-        let mimetype = mimeForPath(path);
-        sendFile(info, fullpath, mimetype);
-    }
-    else
-        sendContent(info, "I'm something else.", 'text/html');
-        //sendContent(info, dirListing('/tmp', '/tmp'), 'text/html');
+	else if( sobj.mode & os.S_IFREG )
+	{
+		//sendContent(info, "I'm a file.", 'text/html');
+		let mimetype = mimeForPath(path);
+		sendFile(info, fullpath, mimetype);
+	}
+	else
+		sendContent(info, "I'm something else.", 'text/html');
 }
 
 function dirListing(root, path)
 {
 	const start = new Date();
 
-    const fullpath = `${root}/${path}`;
-    const [ents, rerr] = os.readdir(fullpath);
+	const fullpath = `${root}/${path}`;
+	const [ents, rerr] = os.readdir(fullpath);
 
-    let result = `<!DOCTYPE html>
+	let result = `<!DOCTYPE html>
 <html>
-    <head>
-        <title>Listing of ${path}</title>
-        <link rel="stylesheet" href="/internal/css/style.css"></link>
-        <link rel="stylesheet" href="/internal/css/fontawesome.min.css"></link>
-        <link rel="stylesheet" href="/internal/css/all.min.css"></link>
-        <script src="/internal/js/gallery.js" defer="true"></script>
-    </head>
-    <body onLoad="initKeys();">
-        <div id="background"></div>
-        <div id="content">
-            <h1>Listing of ${path}</h1>
-            <hr />
-            <table width="100%">`;
+	<head>
+		<title>Listing of ${path}</title>
+		<link rel="stylesheet" href="/internal/css/style.css"></link>
+		<script src="/internal/js/gallery.js" defer="true"></script>
+	</head>
+	<body onLoad="initKeys();">
+		<div id="background"></div>
+		<div id="content">
+			<h1>Listing of ${path}</h1>
+			<hr />
+			<table width="100%">`;
 
-    let images = [];
-    let index = 0;
+	let images = [];
+	let index = 0;
 
-    let pathParts = path.split(/\//g).filter( function(p) { return p.length > 0; } );
-    if( pathParts.length > 0 )
-    {
-        pathParts.pop();
-        const prevPath = pathParts.join('/');
-        result += `<tr>
-            <td colspan="4"><a href="/${prevPath}">Up to /${prevPath}</a></td>
-        </tr>`;
-    }
+	let pathParts = path.split(/\//g).filter( function(p) { return p.length > 0; } );
+	if( pathParts.length > 0 )
+	{
+		pathParts.pop();
+		const prevPath = pathParts.join('/');
+		result += `<tr>
+			<td colspan="4"><a href="/${prevPath}">Up to /${prevPath}</a></td>
+		</tr>`;
+	}
 
-    const lc = path.substr( path.length-1, 1 );
-    if( lc !== '/' )
-        path = path + '/';
+	const lc = path.substr( path.length-1, 1 );
+	if( lc !== '/' )
+		path = path + '/';
 
-    for( const e of ents )
-    {
-        if( e === '.' || e === '..' )
-            continue;
+	for( const e of ents )
+	{
+		if( e === '.' || e === '..' )
+			continue;
 
-        const filepath = `${fullpath}/${e}`;
-        const [sobj, serr] = os.stat(filepath);
-        let niceSize = '???';
-        let mdate = '???';
-        if( !sobj )
-            niceSize = serr;
-        else
-        {
-            niceSize = bytesToSize(sobj.size);
-            mdate = new Date(sobj.mtime);
-        }
+		const filepath = `${fullpath}/${e}`;
+		const [sobj, serr] = os.stat(filepath);
+		let niceSize = '???';
+		let mdate = '???';
+		if( !sobj )
+			niceSize = serr;
+		else
+		{
+			niceSize = bytesToSize(sobj.size);
+			mdate = new Date(sobj.mtime);
+		}
 
-        let imgLink = '';
-        if( e.endsWith('.png') || e.endsWith('.jpg') || e.endsWith('.gif') )
-        {
-            images.push( { 'path':`${path}${e}`, 'name':e } );
-            imgLink = `<span onClick="openGallery(${index});" style="cursor: pointer;"><i class="fas fa-regular fa-images"></i></span>`;
-            index++;
-        }
+		let imgLink = '';
+		if( e.endsWith('.png') || e.endsWith('.jpg') || e.endsWith('.jpeg') || e.endsWith('.gif') )
+		{
+			images.push( { 'path':`${path}${e}`, 'name':e } );
+			imgLink = `<span onClick="openGallery(${index});" style="cursor: pointer;"><span class="galleryIcon"></span></span>`;
+			index++;
+		}
 
-        result += `<tr>
-            <td><a href="${path}${e}">${e}</a></td>
-            <td>${niceSize}</td>
-            <td>${mdate}</td>
-            <td>${imgLink}</td>
-        </tr>`;
-    }
+		result += `<tr>
+			<td><a href="${path}${e}">${e}</a></td>
+			<td>${niceSize}</td>
+			<td>${mdate}</td>
+			<td>${imgLink}</td>
+		</tr>`;
+	}
 
-    result += `</table></div>
-    <script>const images = ${JSON.stringify(images)};</script>
-    <div id="imageViewer" onClick="closeGallery();">
-        <img onClick="closeGallery();" id="focusImage" />
-    </div>
-    <div id="imageLabel">Norq</div>
-    <div id="loader"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>
-    </body></html>`;
+	result += `</table></div>
+	<script>const images = ${JSON.stringify(images)};</script>
+	<div id="imageViewer" onClick="closeGallery();">
+		<img onClick="closeGallery();" id="focusImage" />
+	</div>
+	<div id="imageLabel">Norq</div>
+	<div id="loader"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>
+	</body></html>`;
 
 	const duration = (new Date().getTime()) - start.getTime();
 	console.log(`dirListing took ${duration}ms`);
 
-    return result;
+	return result;
 }
 
 // Regular:
@@ -508,24 +491,24 @@ function runServer(sinfo)
 
 function setupClient(info)
 {
-    console.log("info: "+JSON.stringify(info,null,2));
+	console.log("info: "+JSON.stringify(info,null,2));
 	info.open = true;
 
 	let handleRead = function() {
-        let data = new Uint8Array(8192);
-        try {
-            const br = os.read(info.fd, data.buffer, 0, data.length);
-            if( br < 0 ) {
-                console.log("read error");
-                os.setReadHandler(info.fd, null);
-                return;
-            }
-            else if( 0 == br )
-            {
-                console.log(`Connection closed from ${info.family}:[${info.ip}]:${info.port}`);
-                info.close();
-            }
-            else
+		let data = new Uint8Array(8192);
+		try {
+			const br = os.read(info.fd, data.buffer, 0, data.length);
+			if( br < 0 ) {
+				console.log("read error");
+				os.setReadHandler(info.fd, null);
+				return;
+			}
+			else if( 0 == br )
+			{
+				console.log(`Connection closed from ${info.family}:[${info.ip}]:${info.port}`);
+				info.close();
+			}
+			else
 			{
 				info.readHandler(data, br);
 				if( info.open && info.transmitting )
@@ -541,13 +524,13 @@ function setupClient(info)
 					};
 				}
 			}
-        } catch(err) {
-            console.log("readhandler: "+err);
-            os.setReadHandler(info.fd, null);
-        }
-    };
+		} catch(err) {
+			console.log("readhandler: "+err);
+			os.setReadHandler(info.fd, null);
+		}
+	};
 
-    os.setReadHandler(info.fd, handleRead);
+	os.setReadHandler(info.fd, handleRead);
 }
 
 // TLS:
@@ -605,7 +588,7 @@ function runTLSServer(sinfo)
 			info.flush = function()
 			{
 				console.log("Sync.");
-				net.sync(info.fd);
+				//net.sync(info.fd);
 			};
 			info.close = function()
 			{
@@ -641,9 +624,9 @@ function runTLSServer(sinfo)
 
 function setupTLSClient(info)
 {
-    console.log(`info: ${JSON.stringify(info,null,2)}`);
+	console.log(`info: ${JSON.stringify(info,null,2)}`);
 
-    os.setReadHandler(info.fd, function() {
+	os.setReadHandler(info.fd, function() {
 		if( !info.handshakeComplete )
 		{
 			try {
@@ -658,27 +641,27 @@ function setupTLSClient(info)
 			return;
 		}
 
-        try {
+		try {
 			const br = info.tlsSocket.read(4096);
-            if( !br ) {
-                console.log("read error");
+			if( !br ) {
+				console.log("read error");
 				os.close(info.fd);
-                os.setReadHandler(info.fd, null);
-                return;
-            }
-            else if( br.length === 0 )
-            {
-                console.log(`Connection closed from ${info.family}:[${info.ip}]:${info.port}`);
-                os.setReadHandler(info.fd, null);
-                return;
-            }
-            else
+				os.setReadHandler(info.fd, null);
+				return;
+			}
+			else if( br.length === 0 )
+			{
+				console.log(`Connection closed from ${info.family}:[${info.ip}]:${info.port}`);
+				os.setReadHandler(info.fd, null);
+				return;
+			}
+			else
 				return info.readHandler( new Uint8Array(br) );
-        } catch(err) {
-            console.log("readhandler: "+err);
-            os.setReadHandler(info.fd, null);
-        }
-    });
+		} catch(err) {
+			console.log("readhandler: "+err);
+			os.setReadHandler(info.fd, null);
+		}
+	});
 }
 //runTests();
 
