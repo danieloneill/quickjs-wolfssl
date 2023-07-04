@@ -114,7 +114,7 @@ static JSValue js_hash_frombase64(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_digest( JSContext *ctx, JSValueConst this_val,
 		        int argc, JSValueConst *argv,
-				int (*digest)(const unsigned char *, unsigned int len, unsigned char *hash),
+			enum wc_HashType hashType,
 				size_t digestLen
 ) {
 	size_t inlen;
@@ -126,7 +126,7 @@ static JSValue js_digest( JSContext *ctx, JSValueConst this_val,
 	}
 
 	unsigned char *res = malloc(digestLen);
-	int rv = digest(instr, inlen, res);
+        int rv = wc_Hash(hashType, instr, inlen, res, digestLen);
 	if( 0 != rv )
 	{
 		free(res);
@@ -149,13 +149,13 @@ static JSValue js_digest( JSContext *ctx, JSValueConst this_val,
 static JSValue js_hash_md5sum(JSContext *ctx, JSValueConst this_val,
                              int argc, JSValueConst *argv)
 {
-	return js_digest( ctx, this_val, argc, argv, wc_Md5Hash, 16 ); // 128bit
+	return js_digest( ctx, this_val, argc, argv, WC_HASH_TYPE_MD5, 16 ); // 128bit
 }
 
 static JSValue js_hash_sha256sum(JSContext *ctx, JSValueConst this_val,
                                 int argc, JSValueConst *argv)
 {
-	return js_digest( ctx, this_val, argc, argv, wc_Sha256Hash, 32 ); // 256bit
+	return js_digest( ctx, this_val, argc, argv, WC_HASH_TYPE_SHA256, 32 ); // 256bit
 }
 
 static JSValue js_hash_tls_socket_read(JSContext *ctx, JSValueConst this_val,

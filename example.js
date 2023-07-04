@@ -167,12 +167,11 @@ function setupTLSClient(info)
         }
     });
 }
-//runTests();
+runTests();
 
-const sinfo = { 'family':'inet6', 'ip':'::', 'port':8082 };
-runTLSServer(sinfo);
-/*
+//const sinfo = { 'family':'inet6', 'ip':'::', 'port':8082 };
+//runTLSServer(sinfo);
+
 std.gc();
 
 std.exit(0);
-*/

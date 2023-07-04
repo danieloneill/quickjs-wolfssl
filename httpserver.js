@@ -60,12 +60,12 @@ function sendFileChunk(info, headerBuffer)
 		//info.write(newbuf.buffer);
 	}
 
-    try {
-        const br = os.read(info.file, data.buffer, bp, data.length-bp);
-        if( 0 == br )
-        {
-            os.setReadHandler(info.file, null);
-            os.close(info.file);
+	try {
+		const br = os.read(info.file, data.buffer, bp, data.length-bp);
+		if( 0 == br )
+		{
+			os.setReadHandler(info.file, null);
+			os.close(info.file);
 			if( info.sendComplete )
 			{
 				info.sendComplete();
@@ -74,17 +74,17 @@ function sendFileChunk(info, headerBuffer)
 
 			info.flush();
 			//info.close();
-            return;
-        }
+			return;
+		}
 
-        info.write(data.buffer, br+bp);
-    } catch(err) {
-        console.log("sendfile: "+err);
-        console.log( new Error().stack );
+		info.write(data.buffer, br+bp);
+	} catch(err) {
+		console.log("sendfile: "+err);
+		console.log( new Error().stack );
 		os.setReadHandler(info.file, null);
 		os.close(info.file);
 		info.close();
-    }
+	}
 }
 
 function sendFile(info, path, mimetype)
@@ -188,7 +188,11 @@ function handleRequest(info, lines)
     else
         sendResource(info, webroot, req[1]);
         */
-    sendResource(info, webroot, req[1]);
+
+    let root = webroot;
+    if( req[1].substr(0, 10) === '/internal/' )
+	root = '.';
+    sendResource(info, root, req[1]);
 
 	if( info.connectionState === 'close' )
 	{
@@ -340,7 +344,7 @@ function dirListing(root, path)
         <link rel="stylesheet" href="/internal/css/style.css"></link>
         <link rel="stylesheet" href="/internal/css/fontawesome.min.css"></link>
         <link rel="stylesheet" href="/internal/css/all.min.css"></link>
-		<script src="/internal/js/gallery.js" defer="true"></script>
+        <script src="/internal/js/gallery.js" defer="true"></script>
     </head>
     <body onLoad="initKeys();">
         <div id="background"></div>
@@ -362,6 +366,10 @@ function dirListing(root, path)
         </tr>`;
     }
 
+    const lc = path.substr( path.length-1, 1 );
+    if( lc !== '/' )
+        path = path + '/';
+
     for( const e of ents )
     {
         if( e === '.' || e === '..' )
@@ -382,13 +390,13 @@ function dirListing(root, path)
         let imgLink = '';
         if( e.endsWith('.png') || e.endsWith('.jpg') || e.endsWith('.gif') )
         {
-            images.push( `${path}/${e}` );
+            images.push( { 'path':`${path}${e}`, 'name':e } );
             imgLink = `<span onClick="openGallery(${index});" style="cursor: pointer;"><i class="fas fa-regular fa-images"></i></span>`;
             index++;
         }
 
         result += `<tr>
-            <td><a href="${path}/${e}">${e}</a></td>
+            <td><a href="${path}${e}">${e}</a></td>
             <td>${niceSize}</td>
             <td>${mdate}</td>
             <td>${imgLink}</td>
@@ -397,7 +405,11 @@ function dirListing(root, path)
 
     result += `</table></div>
     <script>const images = ${JSON.stringify(images)};</script>
-    <div id="imageViewer" onClick="closeGallery();"><img onClick="closeGallery();" id="focusImage" /><br /><span id="imageLabel"></span></div>
+    <div id="imageViewer" onClick="closeGallery();">
+        <img onClick="closeGallery();" id="focusImage" />
+    </div>
+    <div id="imageLabel">Norq</div>
+    <div id="loader"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>
     </body></html>`;
 
 	const duration = (new Date().getTime()) - start.getTime();
@@ -458,7 +470,7 @@ function runServer(sinfo)
 			info.flush = function()
 			{
 				console.log("Sync.");
-				net.sync(info.fd);
+				//net.sync(info.fd);
 			};
 			info.close = function()
 			{
