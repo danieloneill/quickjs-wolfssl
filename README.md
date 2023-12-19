@@ -1,7 +1,7 @@
-# quickjs-hash
+# quickjs-wolfssl
 Simple base64 encoding and md5/sha256 hashing module for QuickJS using WolfSSL
 
-Building requires editing the Makefile and pointing it to your quickjs-2017-03-27 directory, and having OpenSSL 3.x (and headers) installed and findable via pkg-config.
+Building requires editing the Makefile and pointing it to your quickjs-2023-12-09 directory, and having WolfSSL installed (with headers).
 
 WolfSSL doesn't build with Base64 encoding support on ARM by default, so in my case (aarch64) I had to build WolfSSL with it explicitly enabled.
 
