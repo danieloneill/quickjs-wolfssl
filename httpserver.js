@@ -236,6 +236,7 @@ function handlePacket(info, pkt)
 		else if( l !== "\r" )
 			line[lpos++] = l;
 	}
+	info.prevContent += pkt;
 }
 
 function mimeForPath(path)
@@ -476,8 +477,9 @@ function runServer(sinfo)
 			info.readHandler = function(data, br)
 			{
 				try {
-					const asstr = uint8arrayToString(data);
-					handlePacket(info, asstr, data, br);
+					const packet = data.slice(0, br);
+					const asstr = uint8arrayToString(packet);
+					handlePacket(info, asstr, packet, br);
 				} catch(err) {
 					console.log("readHandler error: "+err);
 					console.log( new Error().stack );
@@ -675,7 +677,7 @@ function setupTLSClient(info)
 
 const sinfo = { 'family':'inet6', 'ip':'::', 'port':8082, 'secure':true, 'cert':'certs/testing.crt', 'key':'certs/testing.key' };
 runTLSServer(sinfo);
-const sinfo2 = { 'family':'inet6', 'ip':'::', 'port':8081 };
+const sinfo2 = { 'family':'inet', 'ip':'0.0.0.0', 'port':8081 };
 runServer(sinfo2);
 /*
 std.gc();
