@@ -34,11 +34,11 @@ function stringToUint8array(str)
 }
 
 function bytesToSize(bytes) {
-	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-	if (bytes === 0) return 'n/a'
-	const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
-	if (i === 0) return `${bytes} ${sizes[i]})`
-	return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  if (bytes === 0) return 'n/a'
+  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
+  if (i === 0) return `${bytes} ${sizes[i]}`
+  return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
 }
 
 function sendFileChunk(info, headerBuffer)
@@ -240,20 +240,28 @@ function handlePacket(info, pkt)
 
 function mimeForPath(path)
 {
-	let mimetype = 'text/plain';
-	if( path.endsWith('.png') )
-		mimetype = 'image/png';
-	else if( path.endsWith('.jpg') || path.endsWith('.jpeg') )
-		mimetype = 'image/jpg';
-	else if( path.endsWith('.css') )
-		mimetype = 'text/css';
-	else if( path.endsWith('.js') )
-		mimetype = 'text/javascript';
-	else if( path.endsWith('.otf') )
-		mimetype = 'font/otf';
-	else if( path.endsWith('.html') )
-		mimetype = 'text/html';
-	return mimetype;
+    let mimetype = 'text/plain';
+    if( path.endsWith('.png') )
+        mimetype = 'image/png';
+    else if( path.endsWith('.jpg') || path.endsWith('.jpeg') )
+        mimetype = 'image/jpg';
+    else if( path.endsWith('.gif') )
+        mimetype = 'image/gif';
+    else if( path.endsWith('.webp') )
+        mimetype = 'image/webp';
+    else if( path.endsWith('.mp4') )
+        mimetype = 'video/mp4';
+    else if( path.endsWith('.webm') )
+        mimetype = 'video/webm';
+    else if( path.endsWith('.css') )
+        mimetype = 'text/css';
+    else if( path.endsWith('.js') )
+        mimetype = 'text/javascript';
+    else if( path.endsWith('.otf') )
+        mimetype = 'font/otf';
+    else if( path.endsWith('.html') )
+        mimetype = 'text/html';
+    return mimetype;
 }
 
 function getHTTPDate( indate )
@@ -329,7 +337,7 @@ function dirListing(root, path)
 		<link rel="stylesheet" href="/internal/css/style.css"></link>
 		<script src="/internal/js/gallery.js" defer="true"></script>
 	</head>
-	<body onLoad="initKeys();">
+	<body onLoad="initGallery();">
 		<div id="background"></div>
 		<div id="content">
 			<h1>Listing of ${path}</h1>
@@ -371,7 +379,7 @@ function dirListing(root, path)
 		}
 
 		let imgLink = '';
-		if( e.endsWith('.png') || e.endsWith('.jpg') || e.endsWith('.jpeg') || e.endsWith('.gif') )
+                if( e.endsWith('.png') || e.endsWith('.jpg') || e.endsWith('.webp') || e.endsWith('.jpeg') || e.endsWith('.gif') )
 		{
 			images.push( { 'path':`${path}${e}`, 'name':e } );
 			imgLink = `<span onClick="openGallery(${index});" style="cursor: pointer;"><span class="galleryIcon"></span></span>`;

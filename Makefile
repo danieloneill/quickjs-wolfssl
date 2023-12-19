@@ -1,4 +1,4 @@
-QJSPATH=../../quickjs-2021-03-27
+QJSPATH=../../quickjs-2023-12-09
 
 CC:=gcc
 LD:=ld
@@ -17,7 +17,7 @@ LD:=ld
 # Host compile:
 CROSS_CC=$(CC)
 CROSS_LD=$(LD)
-CFLAGS=-I$(QJSPATH) $(shell pkg-config --cflags wolfssl)
+CFLAGS=-I$(QJSPATH) $(shell pkg-config --cflags wolfssl) -fPIC
 LDFLAGS=$(QJSPATH)/libquickjs.a $(shell pkg-config --libs wolfssl) -lm -ldl
 
 quickjs-wolfssl.so: quickjs-wolfssl.o
